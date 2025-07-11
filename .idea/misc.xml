@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="enabledOnReformat" value="true" />
+    <option name="enabledOnSave" value="true" />
+    <option name="pathToExecutable" value="$USER_HOME$/anaconda3/bin/black" />
+    <option name="sdkUUID" value="4ea302b1-97a4-4e2a-9d6e-6a2d4cb5b60d" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="nnenv" project-jdk-type="Python SDK" />
+</project>

@@ -1,0 +1,7 @@
+INPUT_DIM_KEY = "input_dim"
+OUTPUT_DIM_KEY = "output_dim"
+ACTIVATION_KEY = "activation"
+WEIGHT_KEY = "weight"
+BIAS_KEY = "bias"
+INPUTS_KEY = "inputs"
+Z_KEY = "Z"
