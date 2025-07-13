@@ -8,6 +8,7 @@ class NetworkConfig(Config):
     seed: int
 
     activations: list
+    lr: float
 
     def __init__(self, config):
         super().__init__(config)
