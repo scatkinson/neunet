@@ -1,0 +1,18 @@
+logging_path: /tmp
+pipeline_id:
+
+data_path: data/poly_reg.csv
+target_col: y
+
+seed: 2
+
+test_size: 0.2
+
+dim_list: [256,1]
+activation_list: [relu,identity]
+lr: 0.0005
+n_epochs: 50
+loss_str: rmse
+num_batches: 100
+wts_low: -0.1
+wts_high: 0.1
