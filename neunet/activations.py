@@ -20,6 +20,11 @@ class ReLu(Activation):
     def eval(self, x):
         return np.maximum(0, x)
 
+    def eval_derivative(self, dA_curr, Z_curr):
+        dZ = np.array(dA_curr, copy=True)
+        dZ[Z_curr <= 0] = 0
+        return dZ
+
 
 class SoftMax(Activation):
     def __init__(self):
@@ -28,6 +33,9 @@ class SoftMax(Activation):
     def eval(self, x):
         return np.exp(x) / np.sum(np.exp(x))
 
+    def eval_derivative(self, dA_curr, Z_curr):
+        pass
+
 
 class Sigmoid(Activation):
     def __init__(self):
@@ -35,6 +43,10 @@ class Sigmoid(Activation):
 
     def eval(self, x):
         return 1 / (1 + np.exp(-x))
+
+    def eval_derivative(self, dA_curr, Z_curr):
+        sig = self.eval(Z_curr)
+        return dA_curr * sig * (1 - sig)
 
 
 class Tanh(Activation):
@@ -45,7 +57,7 @@ class Tanh(Activation):
         return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
 
-class HardTang(Activation):
+class HardTanh(Activation):
     def __init__(self):
         super().__init__()
 

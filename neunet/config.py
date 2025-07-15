@@ -1,6 +1,9 @@
 from abc import ABC
 from neunet import util, constants as const
 from typing import Callable
+import os
+
+from neunet import log_wu
 
 
 class ConfigError(Exception):
@@ -27,12 +30,15 @@ class Config(ABC):
         if not self.conf.get("pipeline_id"):
             self.pipeline_id = util.get_pipeline_id()
             self.pipeline_id = self.pipeline_id.replace(".", "-")
-        # Get logging directory path from constants.py
-        self.logging_path = getattr(
-            self,
-            "logging_path",
-            const.LOGGING_DIRECTORY,
-        )
+        self.logfile = None
+        self.logging_path = self.conf.get("logging_path")
+        if self.logging_path:
+            try:
+                os.makedirs(self.logging_path, exist_ok=True)
+            except FileExistsError:
+                pass  # directory already exists
+            self.logfile = "/".join([self.logging_path, self.pipeline_id + ".log"])
+        log_wu.setup_logging(self.logfile)
 
     @property
     def required_config(self) -> dict:

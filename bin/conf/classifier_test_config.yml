@@ -1,0 +1,15 @@
+logging_path: /tmp
+pipeline_id:
+
+data_path: data/sin_class.csv
+target_col: class
+
+seed: 2
+
+test_size: 0.2
+
+dim_list: [16,8,4,1]
+activation_list: [relu,relu,relu,sigmoid]
+lr: 0.00001
+n_epochs: 12800
+loss_str: logloss

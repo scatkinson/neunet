@@ -1,3 +1,5 @@
+LOGGING_DIRECTORY = "/tmp"
+
 INPUT_DIM_KEY = "input_dim"
 OUTPUT_DIM_KEY = "output_dim"
 ACTIVATION_KEY = "activation"
@@ -7,3 +9,14 @@ INPUTS_KEY = "inputs"
 Z_KEY = "Z"
 DW_KEY = "dW"
 DB_KEY = "db"
+
+RELU_STR = "relu"
+SOFTMAX_STR = "softmax"
+SIGMOID_STR = "sigmoid"
+TANH_STR = "tanh"
+HARDTANH_STR = "hardtanh"
+
+CROSSENTROPY_STR = "crossentropy"
+MSE_STR = "mse"
+RMSE_STR = "rmse"
+LOGLOSS_STR = "logloss"

@@ -1,37 +1,34 @@
 import numpy as np
 import pandas as pd
+import logging
 
-from neunet.network_config import NetworkConfig
-from neunet.layer import DenseLayer
+from neunet.layer import *
 from neunet.losses import *
 import neunet.constants as const
+
+loss_dict = {
+    const.CROSSENTROPY_STR: CrossEntropy(),
+    const.MSE_STR: MSE(),
+    const.RMSE_STR: RMSE(),
+    const.LOGLOSS_STR: LogLoss(),
+}
 
 
 class Network:
 
-    def __init__(self, conf: NetworkConfig):
-        self.conf = conf
-        np.random.seed(self.conf.seed)
-        self.exog = self.get_exog()
-        self.endog = self.get_endog()
-        self.predicted = None
-        self.layers: dict[Layer] = {}
+    def __init__(self, lr: float, n_epochs: int, loss_name: str, input_dim: int):
+        self.lr = lr
+        self.n_epochs = n_epochs
+        self.layers: dict[int, Layer] = {}
         self.layer_cnt: int = 0
         self.architecture: dict = {}
         self.params: dict = {}
         self.memory: dict = {}
         self.gradients: dict = {}
-        self.loss: Loss = self.get_loss()
-
-    def get_exog(self):
-        return {}
-
-    def get_endog(self):
-        return {}
-
-    def get_loss(self):
-        loss = LogLoss()
-        return loss
+        self.loss_name = loss_name
+        self.loss: Loss = loss_dict[loss_name]
+        self.loss_list = []
+        self.input_dim: int = input_dim
 
     def add(self, layer: Layer):
         self.layers[self.layer_cnt] = layer
@@ -41,15 +38,15 @@ class Network:
         for key, layer in self.layers.items():
             if key == 0:
                 self.architecture[key] = {
-                    const.INPUT_DIM_KEY: self.exog.shape[1],
+                    const.INPUT_DIM_KEY: self.input_dim,
                     const.OUTPUT_DIM_KEY: layer.num_neurons,
-                    const.ACTIVATION_KEY: self.conf.activations[key],
+                    const.ACTIVATION_KEY: layer.activation,
                 }
             else:
                 self.architecture[key] = {
                     const.INPUT_DIM_KEY: self.layers[key - 1].num_neurons,
                     const.OUTPUT_DIM_KEY: layer.num_neurons,
-                    const.ACTIVATION_KEY: self.conf.activations[key],
+                    const.ACTIVATION_KEY: layer.activation,
                 }
 
     def init_weights(self):
@@ -68,8 +65,8 @@ class Network:
                 const.BIAS_KEY: np.zeros((1, dim_dict[const.OUTPUT_DIM_KEY])),
             }
 
-    def forward(self):
-        A_curr = self.exog
+    def forward(self, X):
+        A_curr = X
 
         for key in self.layers.keys():
             A_prev = A_curr
@@ -77,35 +74,30 @@ class Network:
                 inputs=A_prev,
                 weights=self.params[key][const.WEIGHT_KEY],
                 bias=self.params[key][const.BIAS_KEY],
-                activation=self.architecture[key][const.ACTIVATION_KEY],
             )
             self.memory[key] = {const.INPUTS_KEY: A_prev, const.Z_KEY: Z_curr}
 
-        self.predicted = A_curr
+        return A_curr
 
-    def backprop(self):
-        self.endog.reshape(self.predicted.shape)
+    def backprop(self, actual: np.array, predicted: np.array):
+        actual = actual.reshape(predicted.shape)
 
-        dA_prev = self.loss.eval_derivative(self.endog, self.predicted)
-
-        for layer_idx_prev, layer in reversed(list(enumerate(self.layers.items()))):
-            layer_idx_curr = layer_idx_prev + 1
+        dA_prev = self.loss.eval_derivative(actual, predicted)
+        for idx, layer in reversed(list(self.layers.items())):
             dA_curr = dA_prev
 
-            A_prev = self.memory[layer_idx_prev][const.INPUTS_KEY]
-            Z_curr = self.memory[layer_idx_curr][const.Z_KEY]
-            W_curr = self.params[layer_idx_curr][const.WEIGHT_KEY]
-            b_curr = self.params[layer_idx_curr][const.BIAS_KEY]
+            A_prev = self.memory[idx][const.INPUTS_KEY]
+            Z_curr = self.memory[idx][const.Z_KEY]
+            W_curr = self.params[idx][const.WEIGHT_KEY]
 
             dA_prev, dW_curr, db_curr = layer.backward(
                 dA_curr=dA_curr,
                 W_curr=W_curr,
-                b_curr=b_curr,
                 Z_curr=Z_curr,
                 A_prev=A_prev,
             )
 
-            self.gradients[layer_idx_prev] = {
+            self.gradients[idx] = {
                 const.DW_KEY: dW_curr,
                 const.DB_KEY: db_curr,
             }
@@ -113,11 +105,24 @@ class Network:
     def update(self):
         for key, layer in self.layers.items():
             self.params[key][const.WEIGHT_KEY] -= (
-                self.conf.lr * self.gradients[key][const.DW_KEY]
+                self.lr * self.gradients[key][const.DW_KEY]
             )
             self.params[key][const.BIAS_KEY] -= (
-                self.conf.lr * self.gradients[key][const.DB_KEY]
+                self.lr * self.gradients[key][const.DB_KEY]
             )
 
-    def train(self):
-        pass
+    def train(self, X, y):
+        self.init_weights()
+
+        for i in range(self.n_epochs):
+            y_hat = self.forward(X)
+            y_hat = y_hat.reshape(y.shape)
+            loss_value = self.loss.eval(y, y_hat)
+            self.loss_list.append(loss_value)
+
+            self.backprop(actual=y, predicted=y_hat)
+
+            self.update()
+
+            if (i + 1) % 50 == 0:
+                logging.info(f"\nEPOCH: {i+1}\n LOSS ({self.loss_name}): {loss_value}")

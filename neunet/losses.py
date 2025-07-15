@@ -1,8 +1,11 @@
 import numpy as np
 from abc import ABC
 
+import neunet.constants as const
+
 
 class Loss(ABC):
+
     def __init__(self):
         pass
 
@@ -43,3 +46,6 @@ class LogLoss(Loss):
 
     def eval(self, y: np.array, y_hat: np.array):
         return -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+
+    def eval_derivative(self, y: np.array, y_hat: np.array):
+        return (1 - y) / (1 - y_hat) - y / y_hat

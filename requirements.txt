@@ -1,9 +1,11 @@
 #python==3.11.4
 pandas==2.1.0
-notebook==7.0.3
+notebook==7.0.8
 black>=23.7.0
 mypy==1.5.1
 ipython==8.15.0
 numpy==1.25.2
 pytest==7.4.0
 ruff==0.12.1
+matplotlib
+scikit-learn

@@ -2,11 +2,23 @@ import numpy as np
 from typing import Callable
 from abc import ABC
 
-from neunet.layer_config import LayerConfig
 from neunet.activations import *
+import neunet.constants as const
+
+activation_dict = {
+    const.RELU_STR: ReLu(),
+    const.SIGMOID_STR: Sigmoid(),
+    const.SOFTMAX_STR: SoftMax(),
+    const.TANH_STR: Tanh(),
+    const.HARDTANH_STR: HardTanh(),
+}
 
 
 class Layer(ABC):
+
+    num_neurons: int
+    activation: Activation
+
     def __init__(self):
         pass
 
@@ -19,14 +31,10 @@ class Layer(ABC):
 
 class DenseLayer(Layer):
 
-    def __init__(self, num_neurons):
+    def __init__(self, num_neurons: int, activation_name: str):
         super().__init__()
         self.num_neurons = num_neurons
-        self.activation = self.get_activation()
-
-    def get_activation(self):
-        activation = ReLu()
-        return activation
+        self.activation = activation_dict[activation_name]
 
     def forward(
         self,
@@ -34,7 +42,7 @@ class DenseLayer(Layer):
         weights: np.array,
         bias: np.array,
     ):
-        Z_curr = np.dot(weights, inputs) + bias
+        Z_curr = np.dot(inputs, weights.T) + bias
         A_curr = self.activation.eval(Z_curr)
         return A_curr, Z_curr
 
@@ -42,14 +50,13 @@ class DenseLayer(Layer):
         self,
         dA_curr: np.array,
         W_curr: np.array,
-        b_curr: np.array,
         Z_curr: np.array,
         A_prev: np.array,
     ):
-        m = A_prev.shape[1]
-        dZ_curr = self.activation.eval_derivative(dA_curr, Z_curr)
-        dW_curr = np.dot(dZ_curr, A_prev.T) / m
-        db_curr = np.sum(dZ_curr, axis=1, keepdims=True) / m
-        dA_prev = np.dot(W_curr.T, dZ_curr)
+        dA_curr = dA_curr.reshape(Z_curr.shape)
+        dZ_curr = self.activation.eval_derivative(dA_curr=dA_curr, Z_curr=Z_curr)
+        dW_curr = np.dot(dZ_curr.T, A_prev)
+        db_curr = np.sum(dZ_curr, axis=0, keepdims=True)
+        dA_prev = np.dot(dZ_curr, W_curr)
 
         return dA_prev, dW_curr, db_curr
