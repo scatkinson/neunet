@@ -49,14 +49,14 @@ class Network:
                     const.ACTIVATION_KEY: layer.activation,
                 }
 
-    def init_weights(self):
+    def init_weights(self, low, high):
         self.compile()
 
         for key, dim_dict in self.architecture.items():
             self.params[key] = {
                 const.WEIGHT_KEY: np.random.uniform(
-                    low=-1,
-                    high=1,
+                    low=low,
+                    high=high,
                     size=(
                         dim_dict[const.OUTPUT_DIM_KEY],
                         dim_dict[const.INPUT_DIM_KEY],
@@ -111,8 +111,8 @@ class Network:
                 self.lr * self.gradients[key][const.DB_KEY]
             )
 
-    def train(self, X, y):
-        self.init_weights()
+    def train(self, X, y, wts_low, wts_high):
+        self.init_weights(wts_low, wts_high)
 
         for i in range(self.n_epochs):
             y_hat = self.forward(X)
@@ -123,6 +123,33 @@ class Network:
             self.backprop(actual=y, predicted=y_hat)
 
             self.update()
+
+            if (i + 1) % 50 == 0:
+                logging.info(f"\nEPOCH: {i+1}\n LOSS ({self.loss_name}): {loss_value}")
+
+    def batch_train(self, X, y, wts_low, wts_high, num_batches):
+        self.init_weights(wts_low, wts_high)
+
+        for i in range(self.n_epochs):
+
+            indices = np.arange(len(X))
+            np.random.shuffle(indices)
+            batches = []
+            batch_length = len(X) // num_batches
+            for j in range(num_batches):
+                if j < num_batches - 1:
+                    batches.append(indices[j * batch_length : (j + 1) * batch_length])
+                else:
+                    batches.append(indices[j * batch_length :])
+            for batch in batches:
+                y_hat = self.forward(X[batch])
+                y_hat = y_hat.reshape(y[batch].shape)
+                loss_value = self.loss.eval(y[batch], y_hat)
+                self.loss_list.append(loss_value)
+
+                self.backprop(actual=y[batch], predicted=y_hat)
+
+                self.update()
 
             if (i + 1) % 50 == 0:
                 logging.info(f"\nEPOCH: {i+1}\n LOSS ({self.loss_name}): {loss_value}")

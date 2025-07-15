@@ -10,6 +10,7 @@ Z_KEY = "Z"
 DW_KEY = "dW"
 DB_KEY = "db"
 
+IDENTITY_STR = "identity"
 RELU_STR = "relu"
 SOFTMAX_STR = "softmax"
 SIGMOID_STR = "sigmoid"

@@ -13,6 +13,17 @@ class Activation(ABC):
         pass
 
 
+class Identity(Activation):
+    def __init__(self):
+        super().__init__()
+
+    def eval(self, x):
+        return x
+
+    def eval_derivative(self, dA_curr, Z_curr):
+        return dA_curr
+
+
 class ReLu(Activation):
     def __init__(self):
         super().__init__()
@@ -62,9 +73,9 @@ class HardTanh(Activation):
         super().__init__()
 
     def eval(self, x):
-        if x < -1:
-            return -1
-        elif x < 1:
-            return x
-        else:
-            return 1
+        return np.minimum(1, np.maximum(-1, x))
+
+    def eval_derivative(self, dA_curr, Z_curr):
+        dZ = np.array(dA_curr, copy=True)
+        dZ[(Z_curr <= 1) * (Z_curr >= -1)] = 0
+        return dZ

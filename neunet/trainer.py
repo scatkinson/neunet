@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, r2_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler
 from abc import ABC
 import logging
 
@@ -48,7 +49,9 @@ class Trainer(ABC):
             self.model.add(layer)
 
     def train_model(self):
-        self.model.train(self.X_train, self.y_train)
+        self.model.train(
+            self.X_train, self.y_train, self.conf.wts_low, self.conf.wts_high
+        )
 
     def predict(self):
         y_hat = self.model.forward(self.X_test)
@@ -91,3 +94,34 @@ class MultiClassTrainer(Trainer):
             else:
                 y_2d[idx] = np.array([1, 0])
         return y_2d
+
+
+class RegressionTrainer(Trainer):
+    def __init__(self, config: TrainerConfig):
+        super().__init__(config)
+        self.xscaler = StandardScaler()
+        self.yscaler = StandardScaler()
+
+    def train_model(self):
+
+        self.X_train = self.xscaler.fit_transform(self.X_train)
+        self.y_train = self.y_train.reshape(-1, 1)
+        self.y_train = self.yscaler.fit_transform(self.y_train)
+        self.y_train = self.y_train.reshape(-1)
+
+        self.model.batch_train(
+            self.X_train,
+            self.y_train,
+            self.conf.wts_low,
+            self.conf.wts_high,
+            self.conf.num_batches,
+        )
+
+    def test_model(self):
+        self.X_test = self.xscaler.transform(self.X_test)
+        self.y_test = self.y_test.reshape(-1, 1)
+        self.y_test = self.yscaler.transform(self.y_test)
+        self.y_test = self.y_test.reshape(-1)
+        y_hat = self.predict()
+        r2 = r2_score(self.y_test, y_hat)
+        logging.info(f"R2 Score: {r2}.")

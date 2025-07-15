@@ -19,6 +19,9 @@ class TrainerConfig(Config):
     lr: float
     n_epochs: int
     loss_str: str
+    wts_low: float
+    wts_high: float
+    num_batches: int
 
     def __init__(self, config):
         super().__init__(config)
@@ -51,4 +54,6 @@ class TrainerConfig(Config):
             "lr": float,
             "n_epochs": int,
             "loss_str": str,
+            "wts_low": float,
+            "wts_high": float,
         }

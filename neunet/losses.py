@@ -31,6 +31,9 @@ class MSE(Loss):
     def eval(self, y: np.array, y_hat: np.array):
         return np.mean((y - y_hat) ** 2)
 
+    def eval_derivative(self, y: np.array, y_hat: np.array):
+        return -2 * (y - y_hat) / len(y)
+
 
 class RMSE(Loss):
     def __init__(self):
@@ -38,6 +41,9 @@ class RMSE(Loss):
 
     def eval(self, y: np.array, y_hat: np.array):
         return np.sqrt(np.mean((y - y_hat) ** 2))
+
+    def eval_derivative(self, y: np.array, y_hat: np.array):
+        return -(y - y_hat) / self.eval(y, y_hat)
 
 
 class LogLoss(Loss):

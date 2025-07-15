@@ -6,6 +6,7 @@ import itertools
 import copy
 import inspect
 import getpass
+import numpy as np
 
 from typing import Tuple
 
@@ -272,3 +273,41 @@ def format_param_list(values, unit=None):
         return f"{first_two}, and {other_unit}"
     else:
         return f"{first_two}, and {others_count} others"
+
+
+def correlate2d(in1, in2):
+    """
+    Computes the 2D cross-correlation of two arrays from scratch.
+    This implementation mimics the 'full' mode of scipy.signal.correlate2d.
+
+    Args:
+        in1 (np.ndarray): The first 2D input array.
+        in2 (np.ndarray): The second 2D input array (the kernel/filter).
+
+    Returns:
+        np.ndarray: The 2D cross-correlation result.
+    """
+    h1, w1 = in1.shape
+    h2, w2 = in2.shape
+
+    # Calculate output dimensions for 'full' mode
+    out_h = h1 + h2 - 1
+    out_w = w1 + w2 - 1
+    output = np.zeros((out_h, out_w))
+
+    # Iterate through all possible shifts of in2 over in1
+    for i in range(out_h):
+        for j in range(out_w):
+            # Calculate the sum of products for the current shift
+            current_sum = 0
+            for row_k in range(h2):
+                for col_l in range(w2):
+                    # Determine the corresponding indices in in1
+                    in1_row = i - row_k
+                    in1_col = j - col_l
+
+                    # Check if the indices are within the bounds of in1
+                    if 0 <= in1_row < h1 and 0 <= in1_col < w1:
+                        current_sum += in1[in1_row, in1_col] * in2[row_k, col_l]
+            output[i, j] = current_sum
+    return output

@@ -10,6 +10,8 @@ test_size: 0.2
 
 dim_list: [16,8,4,1]
 activation_list: [relu,relu,relu,sigmoid]
-lr: 0.00001
-n_epochs: 12800
+lr: 0.00002
+n_epochs: 12000
 loss_str: logloss
+wts_low: -0.5
+wts_high: 0.5
