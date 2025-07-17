@@ -102,15 +102,14 @@ class ConvolutionalLayer(Layer):
         W_curr: np.array,
         A_prev: np.array,
     ):
-        dA_prev = np.zeros_like(A_prev)
+        dA_prev = np.zeros_like(A_prev, dtype=np.float64)
         dW_curr = np.zeros_like(W_curr)
 
         for idx in range(A_prev.shape[0]):
             for i in range(self.num_filters):
                 dW_curr[i] += correlate2d_valid(A_prev[idx], dA_curr[idx, i])
                 dA_prev += correlate2d_full(dA_curr[idx, i], W_curr[i])
-
-        db_curr = np.sum(dA_curr, axis=0, keepdims=True)
+        db_curr = np.sum(dA_curr, axis=0, keepdims=True).reshape(dA_curr.shape[1:])
 
         return (
             dA_prev,
