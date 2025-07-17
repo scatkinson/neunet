@@ -42,10 +42,13 @@ class SoftMax(Activation):
         super().__init__()
 
     def eval(self, x):
+        max_val = np.max(x)
+        x = x - max_val
         return np.exp(x) / np.sum(np.exp(x))
 
     def eval_derivative(self, dA_curr, Z_curr):
-        pass
+        sm = self.eval(Z_curr)
+        return dA_curr * sm * (1 - sm)
 
 
 class Sigmoid(Activation):

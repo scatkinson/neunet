@@ -21,7 +21,10 @@ class CrossEntropy(Loss):
         super().__init__()
 
     def eval(self, y: np.array, y_hat: np.array):
-        return -np.mean(y * np.log(y_hat))
+        return -np.mean(y * np.log(y_hat + const.CROSSENTROPY_PAD))
+
+    def eval_derivative(self, y: np.array, y_hat: np.array):
+        return -(y / (y_hat + const.CROSSENTROPY_PAD) * len(y))
 
 
 class MSE(Loss):

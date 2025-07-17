@@ -209,4 +209,6 @@ __marimo__/
 .log
 .csv
 .png
+data/
+data_nopush/
 

@@ -21,3 +21,5 @@ CROSSENTROPY_STR = "crossentropy"
 MSE_STR = "mse"
 RMSE_STR = "rmse"
 LOGLOSS_STR = "logloss"
+
+CROSSENTROPY_PAD = 1e-7
