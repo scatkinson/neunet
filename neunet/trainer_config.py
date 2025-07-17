@@ -16,6 +16,7 @@ class TrainerConfig(Config):
 
     test_size: float
 
+    cnn_config: dict
     dim_list: list[int]
     activation_list: list[str]
     lr: float

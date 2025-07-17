@@ -1,13 +1,20 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score, r2_score, mean_squared_error
+from sklearn.metrics import (
+    roc_auc_score,
+    r2_score,
+    mean_squared_error,
+    confusion_matrix,
+    classification_report,
+)
 from sklearn.preprocessing import StandardScaler
 from abc import ABC
 import logging
 
 from neunet.trainer_config import TrainerConfig
 from neunet.network import Network
-from neunet.util import single_col_df_to_arr, class_to_indicator
+from neunet.util import single_col_df_to_arr, class_to_indicator, indicator_to_class
+import neunet.constants as const
 
 
 class Trainer(ABC):
@@ -84,8 +91,8 @@ class CNNTrainer(Trainer):
 
     def __init__(self, config: TrainerConfig):
         super().__init__(config)
-        self.X_train = single_col_df_to_arr(self.X_train)
-        self.X_test = single_col_df_to_arr(self.X_test)
+        self.X_train = single_col_df_to_arr(self.X_train) / 255
+        self.X_test = single_col_df_to_arr(self.X_test) / 255
         self.y_train_indicator = class_to_indicator(
             self.y_train, self.conf.dim_list[-1]
         )
@@ -98,7 +105,22 @@ class CNNTrainer(Trainer):
             self.conf.wts_low,
             self.conf.wts_high,
             self.conf.num_batches,
+            cnn_wt_scale=self.conf.cnn_config[const.WT_SCALE_KEY],
+            cnn_bias_scale=self.conf.cnn_config[const.BIAS_SCALE_KEY],
         )
+
+    def test_model(self):
+        y_hat = self.predict()
+        y_hat_indicator = np.zeros_like(y_hat)
+        for idx in range(y_hat.shape[0]):
+            y_hat_indicator[idx, np.argmax(y_hat)] = 1
+
+        y_hat_classes = indicator_to_class(y_hat_indicator)
+
+        cm = confusion_matrix(self.y_test, y_hat_classes)
+        cr = classification_report(self.y_test, y_hat_classes)
+
+        logging.info(f"\nCONFUSION MATRIX:\n{cm}\nCLASSIFICATION REPORT:\n{cr}")
 
 
 class RegressionTrainer(Trainer):

@@ -322,3 +322,10 @@ def class_to_indicator(y, n_classes):
     for idx in range(len(y)):
         out[idx, y[idx]] = 1
     return out
+
+
+def indicator_to_class(y):
+    out = np.zeros(len(y))
+    for idx in range(len(y)):
+        out[idx] = np.argmax(y[idx])
+    return out

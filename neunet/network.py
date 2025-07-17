@@ -49,7 +49,7 @@ class Network:
                     const.ACTIVATION_KEY: layer.activation,
                 }
 
-    def init_weights(self, low, high):
+    def init_weights(self, low, high, cnn_wt_scale=1, cnn_bias_scale=1):
         self.compile()
 
         for key, dim_dict in self.architecture.items():
@@ -67,8 +67,12 @@ class Network:
                 }
             elif type(self.layers[key]) == ConvolutionalLayer:
                 self.params[key] = {
-                    const.WEIGHT_KEY: np.random.randn(*self.layers[key].filter_shape),
-                    const.BIAS_KEY: np.random.randn(*self.layers[key].output_shape),
+                    const.WEIGHT_KEY: np.random.normal(
+                        loc=0, scale=cnn_wt_scale, size=self.layers[key].filter_shape
+                    ),
+                    const.BIAS_KEY: np.random.normal(
+                        loc=0, scale=cnn_bias_scale, size=self.layers[key].output_shape
+                    ),
                 }
             elif type(self.layers[key]) == MaxPool:
                 self.params[key] = {
@@ -122,8 +126,10 @@ class Network:
                 self.lr * self.gradients[key][const.DB_KEY]
             )
 
-    def train(self, X, y, wts_low, wts_high):
-        self.init_weights(wts_low, wts_high)
+    def train(self, X, y, wts_low, wts_high, cnn_wt_scale=1, cnn_bias_scale=1):
+        self.init_weights(
+            wts_low, wts_high, cnn_wt_scale=cnn_wt_scale, cnn_bias_scale=cnn_bias_scale
+        )
 
         for i in range(self.n_epochs):
             y_hat = self.forward(X)
@@ -135,11 +141,15 @@ class Network:
 
             self.update()
 
-            if (i + 1) % 50 == 0:
+            if (i + 1) % const.LOGGING_THRESHOLD == 0:
                 logging.info(f"\nEPOCH: {i+1}\n LOSS ({self.loss_name}): {loss_value}")
 
-    def batch_train(self, X, y, wts_low, wts_high, num_batches):
-        self.init_weights(wts_low, wts_high)
+    def batch_train(
+        self, X, y, wts_low, wts_high, num_batches, cnn_wt_scale=1, cnn_bias_scale=1
+    ):
+        self.init_weights(
+            wts_low, wts_high, cnn_wt_scale=cnn_wt_scale, cnn_bias_scale=cnn_bias_scale
+        )
 
         for i in range(self.n_epochs):
 
@@ -162,5 +172,5 @@ class Network:
 
                 self.update()
 
-            if (i + 1) % 50 == 0:
+            if (i + 1) % const.LOGGING_THRESHOLD == 0:
                 logging.info(f"\nEPOCH: {i+1}\n LOSS ({self.loss_name}): {loss_value}")

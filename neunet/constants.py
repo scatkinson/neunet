@@ -26,3 +26,7 @@ CROSSENTROPY_PAD = 1e-7
 FILTER_SIZE_KEY = "filter_size"
 NUM_FILTERS_KEY = "num_filters"
 POOL_SIZE_KEY = "pool_size"
+WT_SCALE_KEY = "wt_scale"
+BIAS_SCALE_KEY = "bias_scale"
+
+LOGGING_THRESHOLD = 1
