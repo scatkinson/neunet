@@ -315,3 +315,10 @@ def single_col_df_to_arr(df):
     for idx in range(len(df)):
         arrays.append(df.iloc[0, 0])
     return np.array(arrays)
+
+
+def class_to_indicator(y, n_classes):
+    out = np.zeros((len(y), n_classes))
+    for idx in range(len(y)):
+        out[idx, y[idx]] = 1
+    return out

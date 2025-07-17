@@ -7,7 +7,7 @@ import logging
 
 from neunet.trainer_config import TrainerConfig
 from neunet.network import Network
-from neunet.util import single_col_df_to_arr
+from neunet.util import single_col_df_to_arr, class_to_indicator
 
 
 class Trainer(ABC):
@@ -86,6 +86,19 @@ class CNNTrainer(Trainer):
         super().__init__(config)
         self.X_train = single_col_df_to_arr(self.X_train)
         self.X_test = single_col_df_to_arr(self.X_test)
+        self.y_train_indicator = class_to_indicator(
+            self.y_train, self.conf.dim_list[-1]
+        )
+        self.y_test_indicator = class_to_indicator(self.y_test, self.conf.dim_list[-1])
+
+    def train_model(self):
+        self.model.batch_train(
+            self.X_train,
+            self.y_train_indicator,
+            self.conf.wts_low,
+            self.conf.wts_high,
+            self.conf.num_batches,
+        )
 
 
 class RegressionTrainer(Trainer):

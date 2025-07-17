@@ -47,7 +47,7 @@ class TrainerConfig(Config):
         if hasattr(self, "cnn_config"):
             out.append(
                 ConvolutionalLayer(
-                    input_shape=(self.data.shape[0], *self.data.iloc[0, 1].shape),
+                    input_shape=self.data.iloc[0, 1].shape,
                     filter_size=self.cnn_config[const.FILTER_SIZE_KEY],
                     num_filters=self.cnn_config[const.NUM_FILTERS_KEY],
                     activation_name=const.RELU_STR,
@@ -55,13 +55,14 @@ class TrainerConfig(Config):
             )
             out.append(
                 MaxPool(
+                    input_shape=out[-1].output_shape,
                     pool_size=self.cnn_config[const.POOL_SIZE_KEY],
                     num_channels=self.cnn_config[const.NUM_FILTERS_KEY],
                 )
             )
         for num_neurons, activation_name in zip(self.dim_list, self.activation_list):
             out.append(
-                DenseLayer(input_shape=num_neurons, activation_name=activation_name)
+                DenseLayer(output_shape=num_neurons, activation_name=activation_name)
             )
         return out
 

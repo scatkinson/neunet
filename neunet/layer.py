@@ -18,7 +18,7 @@ activation_dict = {
 
 class Layer(ABC):
 
-    input_shape: Union[tuple, int]
+    output_shape: Union[tuple, int]
     activation: Activation
     filter_shape: tuple
     output_shape: tuple
@@ -35,9 +35,9 @@ class Layer(ABC):
 
 class DenseLayer(Layer):
 
-    def __init__(self, input_shape: int, activation_name: str):
+    def __init__(self, output_shape: int, activation_name: str):
         super().__init__()
-        self.input_shape = input_shape
+        self.output_shape = output_shape
         self.activation = activation_dict[activation_name]
 
     def forward(
@@ -70,7 +70,7 @@ class ConvolutionalLayer(Layer):
     def __init__(self, input_shape, filter_size, num_filters, activation_name):
         super().__init__()
         self.input_shape = input_shape
-        self.input_len, self.input_height, self.input_width = input_shape
+        self.input_height, self.input_width = input_shape
         self.filter_size = filter_size
         self.num_filters = num_filters
         # currently only coded for ReLu activation
@@ -81,20 +81,19 @@ class ConvolutionalLayer(Layer):
 
         self.filter_shape = (self.num_filters, self.filter_size, self.filter_size)
         self.output_shape = (
-            self.input_len,
             self.num_filters,
             self.input_height - self.filter_size + 1,
             self.input_width - self.filter_size + 1,
         )
 
     def forward(self, inputs, weights, bias):
-        output = np.zeros(self.output_shape)
+        Z = np.zeros((inputs.shape[0], *self.output_shape))
         for idx in range(inputs.shape[0]):
             for i in range(self.num_filters):
-                output[idx, i] = correlate2d_valid(inputs[idx], weights[i])
-        output += bias
-        output = self.activation.eval(output)
-        return output
+                Z[idx, i] = correlate2d_valid(inputs[idx], weights[i])
+        Z += bias
+        A = self.activation.eval(Z)
+        return A, Z
 
     def backward(
         self,
@@ -108,8 +107,8 @@ class ConvolutionalLayer(Layer):
 
         for idx in range(A_prev.shape[0]):
             for i in range(self.num_filters):
-                dW_curr[i] += correlate2d(A_prev[idx], dA_curr[i])
-                dA_prev += correlate2d(dA_curr[idx, i], W_curr[i])
+                dW_curr[i] += correlate2d_valid(A_prev[idx], dA_curr[idx, i])
+                dA_prev += correlate2d_full(dA_curr[idx, i], W_curr[i])
 
         db_curr = np.sum(dA_curr, axis=0, keepdims=True)
 
@@ -121,65 +120,73 @@ class ConvolutionalLayer(Layer):
 
 
 class MaxPool(Layer):
-    def __init__(self, pool_size, num_channels):
+    def __init__(self, input_shape, pool_size, num_channels):
         super().__init__()
         self.pool_size = pool_size
         self.num_channels = num_channels
-        self.input_height = 0
-        self.input_width = 0
-        self.output_height = 0
-        self.output_width = 0
-
-    def forward(self, inputs: np.array):
-        self.input_len, self.num_channels, self.input_height, self.input_width = (
-            inputs.shape
-        )
+        self.input_shape = input_shape
+        self.num_channels, self.input_height, self.input_width = self.input_shape
         self.output_height = self.input_height // self.pool_size
         self.output_width = self.input_width // self.pool_size
+        self.output_shape = self.num_channels * self.output_height * self.output_width
+
+        self.activation = Identity()
+
+    def forward(self, inputs: np.array, weights, bias):
 
         # Determining the output shape
-        output = np.zeros((self.num_channels, self.output_height, self.output_width))
+        output = np.zeros(
+            (inputs.shape[0], self.num_channels, self.output_height, self.output_width)
+        )
 
         # Iterating over different channels
-        for c in range(self.num_channels):
-            # Looping through the height
-            for i in range(self.output_height):
-                # looping through the width
-                for j in range(self.output_width):
+        for idx in range(inputs.shape[0]):
+            for c in range(self.num_channels):
+                # Looping through the height
+                for i in range(self.output_height):
+                    # looping through the width
+                    for j in range(self.output_width):
 
-                    # Starting postition
-                    start_i = i * self.pool_size
-                    start_j = j * self.pool_size
+                        # Starting postition
+                        start_i = i * self.pool_size
+                        start_j = j * self.pool_size
 
-                    # Ending Position
-                    end_i = start_i + self.pool_size
-                    end_j = start_j + self.pool_size
+                        # Ending Position
+                        end_i = start_i + self.pool_size
+                        end_j = start_j + self.pool_size
 
-                    # Creating a patch from the input data
-                    patch = input_data[c, start_i:end_i, start_j:end_j]
+                        # Creating a patch from the input data
+                        patch = inputs[idx, c, start_i:end_i, start_j:end_j]
 
-                    # Finding the maximum value from each patch/window
-                    output[c, i, j] = np.max(patch)
+                        # Finding the maximum value from each patch/window
+                        output[idx, c, i, j] = np.max(patch)
 
-        return output
+        Z = output.reshape(inputs.shape[0], self.output_shape)
+        A = self.activation.eval(Z)
+        return A, Z
 
     def backward(self, A_prev, dA_curr, **kwargs):
         dA_prev = np.zeros_like(A_prev)
-        dW_curr = np.zeros_like(A_prev)
-        db_curr = np.zeros_like(A_prev)
+        dA_curr = dA_curr.reshape(
+            (dA_curr.shape[0], self.num_channels, self.output_height, self.output_width)
+        )
+        dW_curr = 0
+        db_curr = 0
+        for idx in range(A_prev.shape[0]):
+            for c in range(self.num_channels):
+                for i in range(self.output_height):
+                    for j in range(self.output_width):
+                        start_i = i * self.pool_size
+                        start_j = j * self.pool_size
 
-        for c in range(self.num_channels):
-            for i in range(self.output_height):
-                for j in range(self.output_width):
-                    start_i = i * self.pool_size
-                    start_j = j * self.pool_size
+                        end_i = start_i + self.pool_size
+                        end_j = start_j + self.pool_size
+                        patch = A_prev[idx, c, start_i:end_i, start_j:end_j]
 
-                    end_i = start_i + self.pool_size
-                    end_j = start_j + self.pool_size
-                    patch = A_prev[c, start_i:end_i, start_j:end_j]
+                        mask = patch == np.max(patch)
 
-                    mask = patch == np.max(patch)
-
-                    dA_prev[c, start_i:end_i, start_j:end_j] = dA_curr[c, i, j] * mask
+                        dA_prev[idx, c, start_i:end_i, start_j:end_j] = (
+                            dA_curr[idx, c, i, j] * mask
+                        )
 
         return (dA_prev, dW_curr, db_curr)

@@ -38,14 +38,14 @@ class Network:
         for key, layer in self.layers.items():
             if key == 0:
                 self.architecture[key] = {
-                    const.INPUT_DIM_KEY: self.input_dim,
-                    const.OUTPUT_DIM_KEY: layer.input_shape,
+                    const.INPUT_SHAPE_KEY: self.input_dim,
+                    const.OUTPUT_SHAPE_KEY: layer.output_shape,
                     const.ACTIVATION_KEY: layer.activation,
                 }
             else:
                 self.architecture[key] = {
-                    const.INPUT_DIM_KEY: self.layers[key - 1].input_shape,
-                    const.OUTPUT_DIM_KEY: layer.input_shape,
+                    const.INPUT_SHAPE_KEY: self.layers[key - 1].output_shape,
+                    const.OUTPUT_SHAPE_KEY: layer.output_shape,
                     const.ACTIVATION_KEY: layer.activation,
                 }
 
@@ -59,11 +59,11 @@ class Network:
                         low=low,
                         high=high,
                         size=(
-                            dim_dict[const.OUTPUT_DIM_KEY],
-                            dim_dict[const.INPUT_DIM_KEY],
+                            dim_dict[const.OUTPUT_SHAPE_KEY],
+                            dim_dict[const.INPUT_SHAPE_KEY],
                         ),
                     ),
-                    const.BIAS_KEY: np.zeros((1, dim_dict[const.OUTPUT_DIM_KEY])),
+                    const.BIAS_KEY: np.zeros((1, dim_dict[const.OUTPUT_SHAPE_KEY])),
                 }
             elif type(self.layers[key]) == ConvolutionalLayer:
                 self.params[key] = {

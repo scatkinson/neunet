@@ -1,7 +1,7 @@
 LOGGING_DIRECTORY = "/tmp"
 
-INPUT_DIM_KEY = "input_dim"
-OUTPUT_DIM_KEY = "output_dim"
+INPUT_SHAPE_KEY = "input_shape"
+OUTPUT_SHAPE_KEY = "output_shape"
 ACTIVATION_KEY = "activation"
 WEIGHT_KEY = "weight"
 BIAS_KEY = "bias"
