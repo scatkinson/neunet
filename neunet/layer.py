@@ -1,10 +1,10 @@
 import numpy as np
-from typing import Callable
+from typing import Callable, Union
 from abc import ABC
 
 from neunet.activations import *
 import neunet.constants as const
-from neunet.util import correlate2d
+from neunet.util import correlate2d_valid, correlate2d_full
 
 activation_dict = {
     const.IDENTITY_STR: Identity(),
@@ -18,8 +18,10 @@ activation_dict = {
 
 class Layer(ABC):
 
-    num_neurons: int
+    input_shape: Union[tuple, int]
     activation: Activation
+    filter_shape: tuple
+    output_shape: tuple
 
     def __init__(self):
         pass
@@ -33,9 +35,9 @@ class Layer(ABC):
 
 class DenseLayer(Layer):
 
-    def __init__(self, num_neurons: int, activation_name: str):
+    def __init__(self, input_shape: int, activation_name: str):
         super().__init__()
-        self.num_neurons = num_neurons
+        self.input_shape = input_shape
         self.activation = activation_dict[activation_name]
 
     def forward(
@@ -67,7 +69,8 @@ class DenseLayer(Layer):
 class ConvolutionalLayer(Layer):
     def __init__(self, input_shape, filter_size, num_filters, activation_name):
         super().__init__()
-        self.input_height, self.input_width = input_shape
+        self.input_shape = input_shape
+        self.input_len, self.input_height, self.input_width = input_shape
         self.filter_size = filter_size
         self.num_filters = num_filters
         # currently only coded for ReLu activation
@@ -78,48 +81,59 @@ class ConvolutionalLayer(Layer):
 
         self.filter_shape = (self.num_filters, self.filter_size, self.filter_size)
         self.output_shape = (
+            self.input_len,
             self.num_filters,
             self.input_height - self.filter_size + 1,
             self.input_width - self.filter_size + 1,
         )
 
-        self.filters = np.random.randn(*self.filter_shape)
-        self.biases = np.random.randn(*self.output_shape)
-
-    def forward(self, inputs, **kwargs):
+    def forward(self, inputs, weights, bias):
         output = np.zeros(self.output_shape)
-        for i in range(self.num_filters):
-            output[i] = correlate2d(inputs, self.filters[i])
+        for idx in range(inputs.shape[0]):
+            for i in range(self.num_filters):
+                output[idx, i] = correlate2d_valid(inputs[idx], weights[i])
+        output += bias
         output = self.activation.eval(output)
         return output
 
-    def backward(self, A_prev, dA_curr):
+    def backward(
+        self,
+        dA_curr: np.array,
+        Z_curr: np.array,
+        W_curr: np.array,
+        A_prev: np.array,
+    ):
         dA_prev = np.zeros_like(A_prev)
-        dF_curr = np.zeros_like(self.filters)
+        dW_curr = np.zeros_like(W_curr)
 
-        for i in range(self.num_filters):
-            dF_curr[i] = correlate2d(A_prev, dA_curr[i])
-            dA_prev += correlate2d(dA_curr[i], self.filters[i])
+        for idx in range(A_prev.shape[0]):
+            for i in range(self.num_filters):
+                dW_curr[i] += correlate2d(A_prev[idx], dA_curr[i])
+                dA_prev += correlate2d(dA_curr[idx, i], W_curr[i])
+
+        db_curr = np.sum(dA_curr, axis=0, keepdims=True)
 
         return (
             dA_prev,
-            dF_curr,
-            dA_curr,
+            dW_curr,
+            db_curr,
         )
 
 
 class MaxPool(Layer):
-    def __init__(self, pool_size):
+    def __init__(self, pool_size, num_channels):
         super().__init__()
         self.pool_size = pool_size
-        self.num_channels = 0
+        self.num_channels = num_channels
         self.input_height = 0
         self.input_width = 0
         self.output_height = 0
         self.output_width = 0
 
     def forward(self, inputs: np.array):
-        self.num_channels, self.input_height, self.input_width = inputs.shape
+        self.input_len, self.num_channels, self.input_height, self.input_width = (
+            inputs.shape
+        )
         self.output_height = self.input_height // self.pool_size
         self.output_width = self.input_width // self.pool_size
 

@@ -23,3 +23,6 @@ RMSE_STR = "rmse"
 LOGLOSS_STR = "logloss"
 
 CROSSENTROPY_PAD = 1e-7
+FILTER_SIZE_KEY = "filter_size"
+NUM_FILTERS_KEY = "num_filters"
+POOL_SIZE_KEY = "pool_size"

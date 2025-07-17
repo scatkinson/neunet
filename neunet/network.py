@@ -39,13 +39,13 @@ class Network:
             if key == 0:
                 self.architecture[key] = {
                     const.INPUT_DIM_KEY: self.input_dim,
-                    const.OUTPUT_DIM_KEY: layer.num_neurons,
+                    const.OUTPUT_DIM_KEY: layer.input_shape,
                     const.ACTIVATION_KEY: layer.activation,
                 }
             else:
                 self.architecture[key] = {
-                    const.INPUT_DIM_KEY: self.layers[key - 1].num_neurons,
-                    const.OUTPUT_DIM_KEY: layer.num_neurons,
+                    const.INPUT_DIM_KEY: self.layers[key - 1].input_shape,
+                    const.OUTPUT_DIM_KEY: layer.input_shape,
                     const.ACTIVATION_KEY: layer.activation,
                 }
 
@@ -53,17 +53,28 @@ class Network:
         self.compile()
 
         for key, dim_dict in self.architecture.items():
-            self.params[key] = {
-                const.WEIGHT_KEY: np.random.uniform(
-                    low=low,
-                    high=high,
-                    size=(
-                        dim_dict[const.OUTPUT_DIM_KEY],
-                        dim_dict[const.INPUT_DIM_KEY],
+            if type(self.layers[key]) == DenseLayer:
+                self.params[key] = {
+                    const.WEIGHT_KEY: np.random.uniform(
+                        low=low,
+                        high=high,
+                        size=(
+                            dim_dict[const.OUTPUT_DIM_KEY],
+                            dim_dict[const.INPUT_DIM_KEY],
+                        ),
                     ),
-                ),
-                const.BIAS_KEY: np.zeros((1, dim_dict[const.OUTPUT_DIM_KEY])),
-            }
+                    const.BIAS_KEY: np.zeros((1, dim_dict[const.OUTPUT_DIM_KEY])),
+                }
+            elif type(self.layers[key]) == ConvolutionalLayer:
+                self.params[key] = {
+                    const.WEIGHT_KEY: np.random.randn(*self.layers[key].filter_shape),
+                    const.BIAS_KEY: np.random.randn(*self.layers[key].output_shape),
+                }
+            elif type(self.layers[key]) == MaxPool:
+                self.params[key] = {
+                    const.WEIGHT_KEY: 0,
+                    const.BIAS_KEY: 0,
+                }
 
     def forward(self, X):
         A_curr = X

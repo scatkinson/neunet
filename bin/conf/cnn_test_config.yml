@@ -1,0 +1,22 @@
+logging_path: /tmp
+pipeline_id:
+
+data_path: data/mnist_med.pkl
+target_col: label
+
+seed: 2
+
+test_size: 0.2
+
+cnn_config:
+  filter_size: 3
+  num_filters: 2
+  pool_size: 2
+dim_list: [16,10]
+activation_list: [relu,softmax]
+lr: 0.00002
+n_epochs: 1
+num_batches: 2
+loss_str: crossentropy
+wts_low: -0.5
+wts_high: 0.5

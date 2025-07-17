@@ -7,6 +7,7 @@ import logging
 
 from neunet.trainer_config import TrainerConfig
 from neunet.network import Network
+from neunet.util import single_col_df_to_arr
 
 
 class Trainer(ABC):
@@ -15,8 +16,7 @@ class Trainer(ABC):
         self.conf = config
         np.random.seed(self.conf.seed)
 
-        self.data = pd.read_csv(self.conf.data_path)
-        self.data.reset_index(drop=True, inplace=True)
+        self.data = self.conf.data
         n_samples = len(self.data)
         indices = np.arange(n_samples)
         np.random.shuffle(indices)
@@ -80,20 +80,12 @@ class BinaryClassifierTrainer(Trainer):
         logging.info(f"AUC SCORE: {auc}")
 
 
-class MultiClassTrainer(Trainer):
+class CNNTrainer(Trainer):
 
     def __init__(self, config: TrainerConfig):
         super().__init__(config)
-
-    def process_target(self, y):
-        y_arr = y.to_numpy()
-        y_2d = np.zeros((y_arr.shape[0], 2), int)
-        for idx in range(len(y_arr)):
-            if y_arr[idx]:
-                y_2d[idx] = np.array([0, 1])
-            else:
-                y_2d[idx] = np.array([1, 0])
-        return y_2d
+        self.X_train = single_col_df_to_arr(self.X_train)
+        self.X_test = single_col_df_to_arr(self.X_test)
 
 
 class RegressionTrainer(Trainer):
