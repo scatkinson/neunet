@@ -10,15 +10,15 @@ test_size: 0.2
 
 cnn_config:
   filter_size: 3
-  num_filters: 2
+  num_filters: 3
   pool_size: 2
-  wt_scale: 0.01
-  bias_scale: 0.01
+  wt_scale: 0.1
+  bias_scale: 0.1
 dim_list: [64,64,10]
 activation_list: [relu,sigmoid,softmax]
-lr: 0.001
-n_epochs: 5
+lr: 0.1
+n_epochs: 1
 num_batches: 4
 loss_str: crossentropy
-wts_low: -0.01
-wts_high: 0.01
+wts_low: -0.1
+wts_high: 0.1

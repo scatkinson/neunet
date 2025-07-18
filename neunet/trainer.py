@@ -113,7 +113,7 @@ class CNNTrainer(Trainer):
         y_hat = self.predict()
         y_hat_indicator = np.zeros_like(y_hat)
         for idx in range(y_hat.shape[0]):
-            y_hat_indicator[idx, np.argmax(y_hat)] = 1
+            y_hat_indicator[idx, np.argmax(y_hat[idx])] = 1
 
         y_hat_classes = indicator_to_class(y_hat_indicator)
 
