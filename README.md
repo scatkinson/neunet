@@ -46,7 +46,7 @@ The available activation functions include:
 * `ReLu`: $f(x) = \text{max}(x,0)$
 * `SoftMax`: 
 ```math
-f(\left\langle x_1, \dots, x_n\right\rangle) = \left\langle(\frac{e^{x_1}}{\sum_{j=1}^n e^{x_j}}, \dots, \frac{e^{x_n}}{\sum_{j=1}^n e^{x_j}})
+f(\left\langle x_1, \dots, x_n\right\rangle) = \left\langle\frac{e^{x_1}}{\sum_{j=1}^n e^{x_j}}, \dots, \frac{e^{x_n}}{\sum_{j=1}^n e^{x_j}}\right\rangle
 ```
 * `Sigmoid`: $f(x) = \frac{1}{1+e^{-x}}$
 * `HardTanh`: $f(x) = \text{min}(1, \text{max}(-1,x))$
