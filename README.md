@@ -81,15 +81,15 @@ Each loss class contains the loss function and its gradient.
 The following loss functions are enabled:
 * `CrossEntropy`: 
 ```math
-f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}) = -\frac{1}{n}\cdot \sum_{j=1}^n y_j\log(\hat{y_j})
+f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}\right\rangle) = -\frac{1}{n}\cdot \sum_{j=1}^n y_j\log(\hat{y_j})
 ```
 * `MSE`:
 ```math
-f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}) = \frac{1}{n} \cdot \sum_{j=1}^n (y_j - \hat{y_j})^2
+f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}\right\rangle) = \frac{1}{n} \cdot \sum_{j=1}^n (y_j - \hat{y_j})^2
 ```
 * `RMSE`:
 ```math
-f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}) = \sqrt{\frac{1}{n} \cdot \sum_{j=1}^n (y_j - \hat{y_j})^2}
+f(\left\langle y_1,\dots, y_n\right\rangle, \left\langle \hat{y_1}, \dots, \hat{y_n}\right\rangle) = \sqrt{\frac{1}{n} \cdot \sum_{j=1}^n (y_j - \hat{y_j})^2}
 ```
 * `LogLoss`:
 ```math
