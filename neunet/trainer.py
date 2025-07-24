@@ -10,6 +10,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 from abc import ABC
 import logging
+import pickle
 
 from neunet.trainer_config import TrainerConfig
 from neunet.network import Network
@@ -43,6 +44,9 @@ class Trainer(ABC):
         ]
         self.X_train = self.data_train[independent_cols]
         self.X_test = self.data_test[independent_cols]
+        if self.conf.save_output:
+            logging.info(f"Saving X_test df at {self.conf.X_test_save_path}.")
+            self.X_test.to_pickle(self.conf.X_test_save_path)
         self.y_train = self.process_target(self.data_train[self.conf.target_col])
         self.y_test = self.process_target(self.data_test[self.conf.target_col])
 
@@ -65,11 +69,18 @@ class Trainer(ABC):
         return y_hat
 
     def test_model(self):
-        pass
+        y_hat = self.predict()
+        return y_hat
+
+    def save_y_hat(self, y_hat):
+        logging.info(f"Saving y_hat to {self.conf.y_hat_save_path}.npy.")
+        np.save(self.conf.y_hat_save_path, y_hat)
 
     def run_trainer(self):
         self.train_model()
-        self.test_model()
+        y_hat = self.test_model()
+        if self.conf.save_output:
+            self.save_y_hat(y_hat)
 
     def process_target(self, y: pd.Series):
         return y.to_numpy()
@@ -85,6 +96,7 @@ class BinaryClassifierTrainer(Trainer):
         auc = roc_auc_score(self.y_test, y_hat)
 
         logging.info(f"AUC SCORE: {auc}")
+        return y_hat
 
 
 class CNNTrainer(Trainer):
@@ -122,6 +134,8 @@ class CNNTrainer(Trainer):
 
         logging.info(f"\nCONFUSION MATRIX:\n{cm}\nCLASSIFICATION REPORT:\n{cr}")
 
+        return y_hat_classes
+
 
 class RegressionTrainer(Trainer):
     def __init__(self, config: TrainerConfig):
@@ -152,3 +166,4 @@ class RegressionTrainer(Trainer):
         y_hat = self.predict()
         r2 = r2_score(self.y_test, y_hat)
         logging.info(f"R2 Score: {r2}.")
+        return y_hat

@@ -29,4 +29,6 @@ POOL_SIZE_KEY = "pool_size"
 WT_SCALE_KEY = "wt_scale"
 BIAS_SCALE_KEY = "bias_scale"
 
-LOGGING_THRESHOLD = 1
+DATA_STR = "data"
+
+LOGGING_THRESHOLD = 50

@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 from neunet.config import Config, ConfigError
 from neunet.layer import *
@@ -26,6 +27,8 @@ class TrainerConfig(Config):
     wts_high: float
     num_batches: int
 
+    save_output: bool
+
     def __init__(self, config):
         super().__init__(config)
         if len(self.dim_list) != len(self.activation_list):
@@ -42,6 +45,27 @@ class TrainerConfig(Config):
         self.data.reset_index(drop=True, inplace=True)
 
         self.layers: list[Layer] = self.get_layers()
+
+        # Save directory is the passed value if given, or the default value if none
+        self.save_directory = getattr(
+            self,
+            "save_directory",
+            os.path.join(
+                const.DATA_STR,
+                self.pipeline_id,
+            ),
+        )
+        # If save path doesn't already exist, create the directory (needed to make new pipeline-named directories)
+        if not os.path.exists(self.save_directory):
+            os.makedirs(self.save_directory, exist_ok=True)
+        self.y_hat_save_filename = "y_hat_" + self.pipeline_id
+        self.y_hat_save_path = os.path.join(
+            self.save_directory, self.y_hat_save_filename
+        )
+        self.X_test_save_filename = "X_test_" + self.pipeline_id + ".pkl"
+        self.X_test_save_path = os.path.join(
+            self.save_directory, self.X_test_save_filename
+        )
 
     def get_layers(self):
         out = []

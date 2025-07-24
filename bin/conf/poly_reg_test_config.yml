@@ -16,3 +16,5 @@ loss_str: rmse
 num_batches: 100
 wts_low: -0.1
 wts_high: 0.1
+
+save_output: True
