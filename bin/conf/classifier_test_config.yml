@@ -1,5 +1,5 @@
 logging_path: /tmp
-pipeline_id:
+pipeline_id: scott-atkinson_20250724_g2kH
 
 data_path: data/sin_class.csv
 target_col: class
@@ -11,7 +11,7 @@ test_size: 0.2
 dim_list: [16,8,4,1]
 activation_list: [relu,relu,relu,sigmoid]
 lr: 0.00002
-n_epochs: 3000
+n_epochs: 4000
 loss_str: logloss
 wts_low: -0.5
 wts_high: 0.5

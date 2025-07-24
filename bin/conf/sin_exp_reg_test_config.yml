@@ -1,5 +1,5 @@
 logging_path: /tmp
-pipeline_id:
+pipeline_id: scott-atkinson_20250724_Y0AT
 
 data_path: data/exp_sin_reg.csv
 target_col: y
@@ -11,7 +11,7 @@ test_size: 0.2
 dim_list: [256,256,256,1]
 activation_list: [relu,relu,relu,identity]
 lr: 0.0005
-n_epochs: 300
+n_epochs: 700
 loss_str: rmse
 num_batches: 100
 wts_low: -1
